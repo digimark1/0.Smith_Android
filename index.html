@@ -1,0 +1,818 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Smith Track'n Go App</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=1, minimum-scale=1.0, maximum-scale=1.0">
+     <link rel="stylesheet" href="css/jquery.mobile-1.4.5.min.css" />
+     <link rel="stylesheet" href="css/loginstyle1.css" />
+    <style>
+				
+				#wrapper {
+					padding:10px;
+					}
+				#outputDiv {
+					display: inline-block;
+					width:95%;
+					top:0px;
+					/*border: 1px solid green;*/
+					color: white;
+                    background-color:#00CA28
+				}
+				#outputDiv2 {
+					display: inline-block;
+					width:95%;
+					top:0px;
+					/*border: 1px solid green;*/
+					color: white;
+                    background-color:#00CA28
+				}
+				#lol{
+				overflow-y:scroll;
+				height:300px;
+				}
+				.pdriver{
+					margin-top:2px;
+					margin-bottom:2px;
+					background:#DDDDDD;
+					float:right;
+					}
+				.pmanager{
+					margin-top:2px;
+					margin-bottom:2px;
+					float:left;
+					}
+				#bol_image{
+					margin-bottom:15px;
+					overflow:hidden;
+					}
+	</style>
+    <script type="text/javascript">
+
+		var myScroll;
+		var myScroll_message;
+		function loaded () {
+			myScroll = new IScroll('#bol_image', {
+				zoom: true,
+				scrollX: true,
+				scrollY: true,
+				mouseWheel: true,
+				wheelAction: 'zoom'
+			});
+			
+			myScroll_message = new IScroll('#notification_message', {
+				zoom: false,
+				scrollX: true,
+				scrollY: true,
+				mouseWheel: true,
+				wheelAction: 'scroll'
+			});
+		}
+		
+		//document.addEventListener('touchmove', function (e) { e.preventDefault(); }, false);
+
+</script>
+	 <script src="js/jquery-1.11.3.min.js"></script> 
+    <script type="text/javascript" charset="utf-8" src="cordova.js"></script>
+    <script src="js/jquery.mobile-1.4.5.min.js"></script> 
+    <script type="text/javascript" src="PushNotification.js"></script>
+    <script type="text/javascript" src="js/iscroll-zoom.js"></script>
+    <script type="text/javascript" charset="utf-8">
+	
+	
+	
+    // Wait for device API libraries to load
+    //
+	var pushNotification;
+    document.addEventListener("deviceready", onDeviceReady, false);
+    // device APIs are available
+   
+				function onDeviceReady() {
+					 localStorage.test1;
+					 screen.lockOrientation('portrait');
+	
+					 navigator.geolocation.getCurrentPosition(onSuccess, onError, {timeout:10000});
+					 //Push Notification
+					 try 
+							{ 
+								pushNotification = window.plugins.pushNotification;
+										$("#app-status-ul").append('<li>Registering ' + device.platform + '</li>');
+								if (device.platform == 'android' || device.platform == 'Android' || device.platform == 'amazon-fireos' ) {
+										pushNotification.register(successHandler, errorHandler, {"senderID":"321111271739","ecb":"onNotification"});		// required!
+								} else {
+									pushNotification.register(tokenHandler, errorHandler, {"badge":"true","sound":"true","alert":"true","ecb":"onNotificationAPN"});	// required!
+								}
+							}
+							catch(err) 
+							{ 
+								txt="An error has ocurred .\n\n"; 
+								txt+="Error Description: " + err.message + "\n\n"; 
+								alert(txt); 
+							} 
+				}
+    // onSuccess Geolocation
+    //
+    function onSuccess(position) {
+		
+	cordova.plugins.backgroundMode.setDefaults({
+			title:  "Smith Track'n Go",
+			ticker: 'test',
+			text:   'The app is working'
+		});
+		
+	cordova.plugins.backgroundMode.enable();
+	
+        var element = document.getElementById('geolocation');
+        element.innerHTML = '<input type="hidden" id="latitude" name="latitude" value="'           + position.coords.latitude              + '"  /><br />' +
+                            '<input type="hidden" id="longitude" name="longitude" value="'          + position.coords.longitude             + '" /><br />' ;
+						
+		if(!localStorage.test1){
+			location.href='#page1';
+			 alert('Please Sign in')
+			}else{
+						 location.href='#page1_1';
+						 //active_load(localStorage.test1)
+			}
+    }
+    // onError Callback receives a PositionError object
+    //
+    function onError(error) {
+        alert('code: '    + error.code    + '\n' +
+              'message: ' + error.message + '\n');
+    }
+//------------------------------- handle GCM notifications for Android -------------------------------------------
+//------------------------------------------------------------------------
+//------------------------------------------------------------------------
+				////////////////
+				////////
+				////////
+				 // handle GCM notifications for Android
+            function onNotification(e) {
+               // $("#app-status-ul").append('<li>EVENT -> RECEIVED:' + e.event + '</li>');
+                $("#app-status-ul").append('<li>EVENT -> RECEIVED:' + e.event + '</li>');
+                
+                switch( e.event )
+                {
+                    case 'registered':
+					if ( e.regid.length > 0 )
+					{
+						$("#app-status-ul").append('<li>REGISTERING -> REGID: \n\n' + '<div id="reg_id">' + e.regid +'</div>'+ "\n\n</li>");
+						$("#reg_id").html(e.regid);
+						console.log("regID = " + e.regid);
+					}
+                    break;
+                    
+                    case 'message':
+                    	if (e.foreground)
+                    	{
+							$("#app-status-ul").append('<li>--INLINE NOTIFICATIONS--' + '</li>');
+					                var soundfile = e.soundname || e.payload.sound;
+					                // if the notification contains a soundname, play it.
+					                // playing a sound also requires the org.apache.cordova.media plugin
+					                var my_media = new Media("/android_asset/www/"+ soundfile);
+							my_media.play();
+						}
+						else
+						{	// otherwise we were launched because the user touched a notification in the notification tray.
+							if (e.coldstart){
+								//$("#app-status-ul").append('<li>--RECEIVED NOTIFICATIONS--' + '</li>');
+							}else{
+							   //$("#app-status-ul").append('<li>--BACKGROUND NOTIFICATIONS--' + '</li>');
+							}
+						}
+							
+						//$("#notification_message").prepend('<p>MANAGER MSG: ' + e.payload.message + '</p>');
+						// Refresh list of loads on notification.
+							
+							
+						//------ SENDING TO LOAD ON NOTIFICATION-----//
+						
+							var load_str = e.payload.message;
+							var load_sub = load_str.substring(0, 6);
+							 var load_push = parseFloat(load_str.substring(6,16));
+							 
+							 var load_title_str = e.payload.title;
+							 var load_title_sub = load_title_str.substring(0, 6);
+							 var load_title_push = parseFloat(load_title_str.substring(6, 16));
+							 
+							 //---- MESSAGE LOAD # ---
+							 
+							if(load_title_sub == "Load #" ){
+								// alert(load_title_push);
+									 $.ajax({
+									 type: 'POST',
+									 dataType: 'json',
+									 url: 'http://lean-staffing.com/trackngo/load/app_get_load_by_driver/'+localStorage.test1,
+									 //http://lean-staffing.com/trackngo/load/app_get_load_view/
+										success: function(data){
+											console.log(data);
+											for(i=0;i<data.length;i++){
+												if (data[i].load_number == load_title_push){
+														$('#load_hid').html(data[i].idts_load);
+														$('#load_number_hid').html(data[i].load_number);
+														$("#header_load").html("BOL # :"+data[i].bol_number+": "+data[i].customer_name+" ");
+														view_bol();
+													}
+												}
+												 alert('1call:'+$('#load_hid').html());
+										}
+										})
+								//active_load(localStorage.test1);
+								 // load_details3($('#load_hid').html());
+								 location.href = "#page4";
+								  
+								} 
+							 
+							 //---- LOAD #
+							if (load_sub == "Load #"){
+								//alert(load_push);
+									 $.ajax({
+									 type: 'POST',
+									 dataType: 'json',
+									 url: 'http://lean-staffing.com/trackngo/load/app_get_load_by_driver/'+localStorage.test1,
+										success: function(data){
+											console.log(data);
+											for(i=0;i<data.length;i++){
+												if (data[i].load_number == load_push){
+														$('#load_hid').html(data[i].idts_load);
+														$('#load_number_hid').html(data[i].load_number);
+														$("#header_load").html("BOL # :"+data[i].bol_number+": "+data[i].customer_name+" ");
+														view_bol();
+													}
+												}
+												alert('2call:'+$('#load_hid').html());
+										}
+										})
+								//active_load(localStorage.test1);
+								  //load_details2($('#load_hid').html());
+								  location.href = "#page6";
+								   
+								}
+								
+                    break;
+                    case 'error':
+                    break;
+                    default:
+                    break;
+                }
+			}
+            
+            function tokenHandler (result) {
+            }
+			
+            function successHandler (result) {
+            }
+            function errorHandler (error) {
+            }
+    </script>
+ 
+  </head>
+  <body onLoad="loaded()">
+   <div data-role="page" id="page0">        	
+            <div data-role="header" style="height:1.5em">
+
+            </div>
+            		<div><h1>Setting Up Phone...</h1></div>
+				<div role="loadingpage" class="ui-content">
+                <img src="css/loading.gif" style="width:20%;margin-left:40%;" />
+				 </div>
+    </div>
+    
+  <div data-role="page" id="page1">
+  	<div data-role="header">
+    	<div><img width="100%" src="css/logo.png" style="margin-top:0px; margin-bottom:0px"/></div>
+    </div>
+  	<div class="inputstyle">
+  		<div role="main" class="ui-content">
+        	
+        	<p id="geolocation">Finding geolocation...</p>
+                <div>
+                    <input type="text" id="user_name" name="user_name" value="" placeholder="phone number" />
+                </div>
+                <div id="hid_uid" hidden></div>
+                <br />
+            	<div><a href="#" id="login_phone" name="login_phone" class="btn-class2">START</a></div>
+                
+     	</div>
+     </div>
+   </div>
+
+  <div data-role="page" id="page1_1">        	
+            <div data-role="header">
+                <div><img width="100%" src="css/logo.png" style="padding-top:15px; padding-left:15px"/></div>
+                </div>
+                        <div><h2 id="active_ld" style="color:red">ACTIVE LOADS </h2><h2 id="history_ld"> HISTORY</h2></div>
+                    	<div role="listpage" class="ui-content" id="lol">
+                        <table id="lol_item"></table>
+                        <table id="lol_item_inactive"></table>
+                        <div id="loading_loads"><img src="css/loading.gif" style="width:20%;margin-left:40%;" /></div>
+                     </div>
+             <!-- register id for push notifications -->
+               <div id="reg_id" hidden></div>
+    </div>
+    
+        <div data-role="page" id="page2" data-url="map-page">        	
+        	<div data-role="header" style="height:1.5em">
+            	<h1 style="padding-top:4px"> <a href="#page1_1" id="back" class="btn-class4" onClick=""> Back</a></h1><br />
+            </div>
+            <h4 style="color: red; margin-top:2px; margin-bottom:2px; margin-left: 15px;" id="header_load"></h4>
+            <div role="mappage" class="ui-content" style="padding-top:2px">
+                <div id="wrapper">
+                <table style="width: 100%;">
+                	<tr>
+                    	<td>
+                        	<div><a href="" id="a" name="a" class="btn-class2" onClick="view_bol()">VIEW BOL</a></div>
+                        </td>
+                     </tr>
+                	<tr>
+                    	<td>
+                        	<div>&nbsp;</div>
+                        </td>
+                     </tr>
+                    <tr>
+                    	<td>
+                        	<div><a href="#page3" id="a" name="a" class="btn-class2">SHIPPER SIGNATURE</a></div>
+                        </td>
+                     </tr>
+                     <tr>
+                    	<td>
+                        	<div>&nbsp;</div>
+                        </td>
+                     </tr>
+                     <tr>
+                     	<td>
+                        	<div><a href="#page5" id="b" name="b" class="btn-class2">CONSIGNEE SIGNATURE</a></div>
+                        </td>
+                     </tr>
+                     <tr>
+                        <td>&nbsp;</td>
+                        <td>&nbsp;</td>
+                     </tr>
+                     <tr>
+                     	<td><div><a href="#page4" id="driver_message" name="b" class="btn-class2" onClick="message_board()">SEND MESSAGE TO MANAGER</a></div><td>
+                     </tr>
+                </table>    
+                </div>
+             </div>
+
+    </div>
+     <div data-role="page" id="page3">
+			<div data-role="header">
+            	<h1> <a href="" id="back3" onClick="close_sig()" class="btn-class2"> Back</a></h1>
+            </div>
+			<div id="content_s">
+				<div id="signatureparent">
+					<div id="signature"></div>
+				</div>
+			</div>
+			<div style="margin-top: 2cm;">
+				<a href="#" id="save_signature" class="btn-class2">SAVE SIGNATURE</a>
+			</div>
+            <div hidden><input type="hidden" id="hidden_Signature" name="hidden_Signature" />
+            </div>
+            <div id="signature_print" hidden></div>
+    </div>
+    <div data-role="page" id="page5">
+			<div data-role="header">
+            	<h1> <a href="" id="back4" onClick="close_sig2()" class="btn-class2"> Back</a></h1>
+            </div>
+			<div id="content_s2">
+				<div id="signatureparent2">
+					<div id="signature2"></div>
+				</div>
+			</div>
+			<div style="margin-top: 2cm;">
+				<a href="#" id="save_signature2" class="btn-class2">SAVE SIGNATURE</a>
+			</div>
+            <div hidden><input type="hidden" id="hidden_Signature2" name="hidden_Signature2" />
+            </div>
+            <div id="signature_print2" hidden></div>
+    </div>
+    <div data-role="page" id="page4">
+        <div data-role="header">
+            <h1> <a href="#page6" id="back4" class="btn-class4"> Back</a></h1>
+        </div>
+  	<div class="inputstyle">
+  		<div role="main" class="ui-content" style="padding-top: 0px;">
+        	<!--<p id="title_messages"><h1>Default Messages</h1></p>-->
+               <h2 style="margin-top: 0px;">Default Messages</h2>
+                <div id="notification_message" style="width:100%;height: 130px;overflow-y: auto;border: 1px solid #ccc;"></div>
+                
+                 <div>
+                    <select id="troubles_">
+                        <option value="">Choose option...</option>
+                         <option value="1">Traffic Jam</option>
+                         <option value="2">Flat Tire</option>
+                         <option value="3">Damaged Vehicle</option>
+                         <option value="4">Weather Problem</option>
+                         <option value="5">Other...</option>
+                    </select>
+                </div>
+                <div id="msg_hid">
+                	<textarea cols="30" rows="10" name="troubles_msg" id="troubles_msg" placeholder="message here" style="outline: none;height:80px;width:100%" ></textarea>
+                </div>
+                <div id="load_hid" hidden></div>
+                <br />
+            	<div><a href="#" id="send_message" name="send_message" class="btn-class2" onClick="sendfunction()">SEND MESSAGE</a></div>
+     	</div>
+     </div>
+   </div>
+   <!-- BOL IMAGE PAGE -->
+   
+
+   <div data-role="page" id="page6">
+   
+   		<div data-role="header">
+            <h1> <a href="#page1_1" id="back5" class="btn-class4"> Back</a></h1>
+        </div>
+            <div id="bol_image">
+            	<img id="image_source" src="css/1633.jpeg" style="width:100%;padding-top:15px;"/>
+            </div>
+            <div data-role="footer"> 
+                   <table style="width: 100%;">
+                        <tr>
+                            <td><div><a href="#page1_1" id="back" class="btn-class2" onClick="">B K</a></div></td>
+                            <td><div><a href="#page3" id="a" name="a" class="btn-class2">S S</a></div></td>
+                            <td><div><a href="#page4" id="driver_message" name="b" class="btn-class2" onClick="message_board()">S M</a></div></td>
+                            <td><div><a href="#page5" id="b" name="b" class="btn-class2">C S</a></div></td>
+                        </tr>
+                   </table>
+               <div id="load_id_hidden" hidden></div>
+               <div id="load_number_hid" hidden></div>
+            </div> 
+   </div>
+	
+	<!---------------------------------- SCRIPTS ----------------- --------->
+		<script>
+
+        $('#active_ld').click(function(){
+				$('#lol_item').show();
+				$('#lol_item_inactive').hide();
+			});
+		
+		
+        $('#history_ld').click(function(){
+				$('#lol_item').hide();
+				$('#lol_item_inactive').show();
+			})
+		  						
+		//------  VIEW BOL IMAGE ------//
+		
+		function view_bol(){
+				                //location.href='#page6';
+								setTimeout(function(){
+										d = new Date();
+										$("#image_source").attr('src','http://leanstaffing.com/tkgo_files/'+$('#load_number_hid').html()+'.jpg?'+d.getTime()+'');
+									 }, 500);
+		}
+		<!-- MESSAGE TO DASHBOARD OPTIONS -->
+		
+		$('#driver_message').click(function(){
+			$('#msg_hid').hide();
+			})
+	
+		$('#troubles_').on('change', function() {
+				  if ($('#troubles_').val() == 5 ){
+						$('#msg_hid').show();
+						//alert($("textarea#troubles_msg").val());
+					}else{
+						$('#msg_hid').hide();
+						}
+				})
+		<!-- SEND MESSAGE TO WEB -->
+		function sendfunction(){
+			if ($('#troubles_').val() == ""){
+					alert ('Please Choose an Option');
+				}else{
+					$.ajax({ 
+                            type: 'POST',
+                            data: {load_id: $('#load_hid').html(), message_id: $('#troubles_').val(), user_id : $('#user_name').val(), message_text: $("textarea#troubles_msg").val(), lat_message: $('#latitude').val(), lng_message:$('#longitude').val()},
+                            url: 'http://lean-staffing.com/testserver/sendmessage.php',
+                            success: function(data){
+                                console.log(data);
+								alert('Your message Has been sent to the Manager');
+								$("textarea#troubles_msg").val("");
+                            },
+                            error: function(){
+                                console.log(data);
+                                alert('There was an error sending your message');
+                            }})
+					}
+			}
+		
+		//-------------- Send Location to DATABASE ------------------------
+		function send_to_db(x,y){ 
+                    var lati = x;
+					$('#latitude').val(lati); // Use to show location when sending callcheck
+                    var longi = y;
+					$('#longitude').val(longi); // Use to show location when sending callcheck
+					var name = localStorage.test1;
+					
+                        $.ajax({
+                            type: 'POST',
+							data: {user_lat: lati, user_long: longi, user_name: name},
+                            url: 'http://leanstaffing.com/testserver/save.php',
+                            success: function(data){
+                                console.log(data);
+                               // alert('Your location was successfully added');
+                            },
+                            error: function(){
+                                console.log(data);
+                                alert('There was an error sending to db');
+                            }})
+		}
+			
+		//---------------------------End ------------------
+		function active_load(id_driver){
+							 $.ajax({
+							 type: 'POST',
+							 dataType: 'json',
+							 url: 'http://lean-staffing.com/trackngo/load/app_get_load_by_driver/'+id_driver,
+							
+	                            success: function(data){
+	                                console.log(data);
+								    $("#lol_item").html("");
+									$("#lol_item_inactive").html("");
+									$("#lol_item_inactive").hide();
+									for(i=0;i<data.length;i++){
+										if(data[i].destination_sign == null){
+												$("#lol_item").append('<tr><td><a href="#" style="color: red;" class="" onclick="load_details('+data[i].idts_load+')"><h3>'+data[i].bol_number+'</h3></a></td><td><ahref="#" style="color: red;" class="" onclick="load_details('+data[i].idts_load+')"><h3>'+data[i].customer_name+'</h3></a></td></tr>');
+											} else {
+												//Change load detals. Just to see old BOL's
+												$("#lol_item_inactive").append('<tr><td><a href="#" style="color: black;" class="" onclick="load_details('+data[i].idts_load+')"><h3>'+data[i].bol_number+'</h3></a></td><td><ahref="#" style="color: black;" class="" onclick="load_details('+data[i].idts_load+')"><h3>'+data[i].customer_name+'</h3></a></td></tr>');
+												}
+										}
+									$('#loading_loads').html("");
+									
+							//-------------- SEND REGISTER ID TO DATABASE --- ANDROID CLOUD MESSAGING --- PUSH
+								var reg = $('#reg_id').html();
+								var id = localStorage.test1;
+								$.ajax({
+									type: 'POST',
+									data: {reg_id: reg, driver_id: id},
+									url: 'http://leanstaffing.com/testserver/saveid.php',
+									success: function(data){
+										console.log(data);
+									},
+									error: function(){
+										console.log(data);
+									}})			
+								//--------------------
+										//location.href = "#page1_1";
+										setInterval(function(){ 
+											 	navigator.geolocation.getCurrentPosition(onSuccess, onError);
+											 	  function onSuccess(position) {
+												  	 var x = position.coords.latitude;
+												     var y = position.coords.longitude;
+													  send_to_db(x,y);
+											 	  }
+											 	   function onError(error) {
+												      alert('GPS inactive');
+												    }
+											 },40000); // Changed from 20 Seconds to 40 seconds Aprox.
+                                //alert('Your location was successfully added');
+                            },
+                            error: function(data){
+                                console.log(data);
+                                alert('There was an error active load');
+                            }})
+				}
+		
+		//---------------------------Query DATA From SERVER  -------------------
+		
+			$('#login_phone').click(function(){
+				var cont_2 = 0;
+				var user_name = $('#user_name').val();
+				alert(user_name);
+				
+				$.ajax({
+					 type: 'POST',
+					 dataType: 'json',
+					 url: 'http://leanstaffing.com/trackngo/driver/app_get',
+					 success: function(data){
+						 
+						 for(i=0;i<data.length;i++){
+							 if (data[i].phone == user_name){
+								 cont_2 = 1;
+								 $('#hid_uid').html(data[i].idts_driver);
+								 }
+							 };
+							 
+							  if (cont_2 == 1){
+										localStorage.test1 = parseFloat($('#hid_uid').html());
+										window.plugins.insomnia.keepAwake();
+										alert(localStorage.test1)
+										active_load(localStorage.test1);
+										location.href = "#page1_1";
+								 	}else{
+									 	alert('Invalid User');
+									 }
+						console.log(data);
+					 },
+					 error: function(){
+						console.log(data);
+						alert('There was an error senddata1');
+					 }})
+			 });
+		</script>
+        
+	<script>
+           function load_details(ix){
+			   		$('#load_hid').html(ix);
+					
+				   location.href = "#page6";
+                    var latitude_driver = parseFloat($('#latitude').val());//37.55;
+                    var longitude_driver = parseFloat($('#longitude').val());//-77.44;
+		    		var id_driver = $('#user_name').val();
+                        $.ajax({
+                            type: 'POST',
+			    			dataType: 'json',
+                            url: 'http://lean-staffing.com/trackngo/load/app_get_load_view/'+ix,
+							beforeSend: function(){
+								
+								},
+                            success: function(data){
+                                console.log(data);
+								$("#header_load").html("BOL # :"+data[0].bol_number+": "+data[0].customer_name+" ");
+								$('#load_number_hid').html(data[0].load_number);
+								d = new Date();
+								setTimeout(function(){
+										$("#image_source").attr('src','http://leanstaffing.com/tkgo_files/'+data[0].load_number+'.jpg?'+d.getTime()+'');
+									 }, 500);
+                            },
+                            error: function(data){
+                                console.log(data);
+                                alert('There was an error load details');
+                            }})
+                       
+                      //return false;
+                };
+		  
+		  	$('#page2').on('pageshow',function(e,data) {
+				cordova.plugins.backgroundMode.enable();
+					 var latitude_driver = parseFloat($('#latitude').val());//37.55;
+					 var longitude_driver = parseFloat($('#longitude').val());//-77.44;
+				})
+					 
+    	</script>
+<!-----------------------END OF   Map, Distance , Time ------------------------------->
+<script src="js/jSignature.min.noconflict.js"></script>
+<script>
+	/* SIGNATURE DETAILS
+	*/
+	function close_sig(){
+		screen.lockOrientation('portrait');
+		$("#signatureparent").html("");
+		location.href='#page6';
+		}
+		
+	function close_sig2(){
+		screen.lockOrientation('portrait');
+		$("#signatureparent2").html("");
+		location.href='#page6';
+		}
+	
+	(function($){
+	
+		$('#page4').on('pageshow',function(e,data){
+		cordova.plugins.backgroundMode.enable();
+		$('#msg_hid').hide();
+		// ----- START CHAT when showing page ------//
+		$.ajax({
+							type: 'POST',
+							dataType: 'json',
+							url: 'http://leanstaffing.com/trackngo/load/get_chat/'+parseFloat($('#load_hid').html())+'/1',
+							success: function(data){
+								$("#notification_message").html("");
+								console.log(data);
+								for(i=0;i<data.length;i++){
+								if ((data[i].driver_sw == '0')&&(data[i].notify_driver =='1')){
+									$("#notification_message").append('<p class="pmanager">'+data[i].user_login+' : '+data[i].comment+'</p><br><br>');
+								} else if ((data[i].driver_sw == '1')) {
+									$("#notification_message").append('<p class="pdriver">'+data[i].driver_name+' : '+data[i].comment+'</p><br><br>');
+								}
+									
+								}
+							},
+							error: function(data){
+								console.log(data);
+							}});
+							
+		// ----- END OF ---- START CHAT when showing page ------//	
+						
+		setInterval(function(){
+			
+						$.ajax({
+							type: 'POST',
+							dataType: 'json',
+							url: 'http://leanstaffing.com/trackngo/load/get_chat/'+parseFloat($('#load_hid').html())+'/1',
+							success: function(data){
+								$("#notification_message").html("");
+								console.log(data);
+								for(i=0;i<data.length;i++){
+								if ((data[i].driver_sw == '0')&&(data[i].notify_driver =='1')){
+									$("#notification_message").append('<p class="pmanager">'+data[i].user_login+' : '+data[i].comment+'</p><br><br>');
+								} else if ((data[i].driver_sw == '1')) {
+									$("#notification_message").append('<p class="pdriver">'+data[i].driver_name+' : '+data[i].comment+'</p><br><br>');
+								}
+									
+								}
+							},
+							error: function(data){
+								console.log(data);
+							}});
+					
+					
+						}, 10000);
+			
+					});
+	
+	// ------ SAVING SHIPPER SIGNATURE ------//
+	$('#save_signature').click(function(){
+            var sigData = $('#signature').jSignature('getData','base30');
+            $('#hidden_Signature').val(sigData);
+			var simage = new Image();
+			simage.src = $('#signature').jSignature('getData');
+			$("#signature_print").html(simage.src);
+			$.ajax({
+					type: 'POST',
+					data: {origin_sig:$('#hidden_Signature').val(),load_id:$('#load_hid').html(),sig_print:$("#signature_print").html(),load_number:$('#load_number_hid').html()},
+					url: 'http://lean-staffing.com/testserver/save_sig.php',
+					success: function(data){
+						console.log(data);
+						
+						message_signature($('#load_hid').html(),1)
+						sigData.jSignature("reset");
+					},
+					error: function(data){
+						console.log(data);
+					}})
+			});
+			
+	// ------ SAVING DELIVERY SIGNATURE ------//
+	$('#save_signature2').click(function(){
+            var sigData = $('#signature2').jSignature('getData','base30');
+            $('#hidden_Signature2').val(sigData);
+			var simage2 = new Image();
+			simage2.src = $('#signature2').jSignature('getData');
+			$("#signature_print2").html(simage2.src);
+			$.ajax({
+					type: 'POST',
+					data: {destination_sig:$('#hidden_Signature2').val(),load_id:$('#load_hid').html(),sig_print:$("#signature_print2").html(),load_number:$('#load_number_hid').html()},
+					url: 'http://lean-staffing.com/testserver/save_sig2.php',
+					success: function(data){
+						console.log(data);
+						//alert('Delivery signature saved');
+						cordova.plugins.backgroundMode.disable();
+						message_signature($('#load_hid').html(),2)
+						sigData.jSignature("reset");
+					},
+					error: function(data){
+						console.log(data);
+					}})
+			});
+	//----------Function for saving signature
+	function message_signature(lid,sig){
+									alert(lid+'-'+sig)
+							  // ------------Message to signature saving 
+									$.ajax({
+										type: 'POST',
+										data: {load_id:lid, sig_id: sig, user_id: localStorage.test1, lat_sig: $('#latitude').val(), lng_sig:$('#longitude').val()},
+										url: 'http://lean-staffing.com/testserver/message_signature.php',
+										success: function(data){
+											alert('Signature saved');
+											location.href='#page6';
+											screen.lockOrientation('portrait');
+											},
+										error: function(data){
+											},
+										})
+						// -----------End of message to signature saving
+		}
+		
+	//----------END OF Function for saving signature
+			
+	$('#page3').on('pageshow',function(e,data) {
+		$("#signatureparent").append('<div id="signature"></div>');
+		$("#signature").html("");
+		var $sigdiv = $("#signature").jSignature({'UndoButton':true});
+     	screen.lockOrientation('landscape');
+	})
+	
+	$('#page5').on('pageshow',function(e,data) {
+		$("#signatureparent2").append('<div id="signature2"></div>');
+		$("#signature2").html("");
+		var $sigdiv = $("#signature2").jSignature({'UndoButton':true});
+     	screen.lockOrientation('landscape');
+	})
+	
+	
+	$('#page1_1').on('pageshow',function(e,data) {
+		cordova.plugins.backgroundMode.enable();
+		alert('iddriver'+localStorage.test1)
+		active_load(localStorage.test1);
+	})
+	})(jQuery)
+</script>
+  </body>
+</html>
